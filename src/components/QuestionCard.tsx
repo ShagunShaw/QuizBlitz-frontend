@@ -82,7 +82,7 @@ export const QuestionCard = ({
                   }`}>
                   {String.fromCharCode(65 + i)}
                 </div>
-                <span>{opt.text}</span>
+                <span>{typeof opt === "string" ? opt : opt.text}</span>
                 {i === question.correctOption && (
                   <CheckCircle2 size={18} className="text-green-500 ml-auto" />
                 )}

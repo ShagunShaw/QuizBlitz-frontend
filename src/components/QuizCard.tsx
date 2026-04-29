@@ -37,7 +37,7 @@ export const QuizCard = ({ quiz }: QuizCardProps) => {
           </div>
           <div className="flex items-center gap-2">
             <Settings size={16} className="text-indigo-400" />
-            {quiz.questionCount || 0} Questions • {quiz.totalPoints || 0} Points
+            {quiz.QuestionsCount || 0} Questions • {quiz.QuestionsCount * 10 || 0} Points
           </div>
         </div>
 
