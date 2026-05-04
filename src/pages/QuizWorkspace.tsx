@@ -11,7 +11,7 @@ import {
 import toast from 'react-hot-toast';
 import { socket, connectSocket } from '../services/socket';
 import { motion } from 'framer-motion';
-
+// After this
 export default function QuizWorkspace() {
   const emptyQuestion = {
     question: '',
@@ -28,6 +28,8 @@ export default function QuizWorkspace() {
   const [loading, setLoading] = useState(true);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
   const [isRunning, setIsRunning] = useState(false);
+  const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleteQuestionsOpen, setDeleteQuestionsOpen] = useState(false)
 
   const [isEditQuizModalOpen, setEditQuizModalOpen] = useState(false);
   const [isQuestionModalOpen, setQuestionModalOpen] = useState(false);
@@ -78,7 +80,6 @@ export default function QuizWorkspace() {
   };
 
   const handleDeleteQuiz = async () => {
-    if (!window.confirm('Are you sure you want to delete this quiz?')) return;
     try {
       await api.delete(`/quiz/${quizId}/`);
       toast.success('Quiz deleted');
@@ -127,7 +128,6 @@ export default function QuizWorkspace() {
 
   const handleDeleteQuestions = async () => {
     if (selectedQuestionIds.size === 0) return;
-    if (!window.confirm(`Delete ${selectedQuestionIds.size} question(s)?`)) return;
     try {
       await api.delete(`/quiz/questions/${quizId}/`, { data: { questionIds: Array.from(selectedQuestionIds) } });
       toast.success('Questions deleted');
@@ -256,6 +256,15 @@ export default function QuizWorkspace() {
         }
         .qw-status-pill.scheduled {
           background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2); color: #fdba74;
+        }
+
+        .qw-btn-secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        .qw-btn-secondary:hover {
+          background: #e5e7eb;
         }
 
         /* ── Section header ── */
@@ -388,7 +397,7 @@ export default function QuizWorkspace() {
               <button onClick={() => setCohostModalOpen(true)} className="qw-icon-btn" title="Manage Co-hosts">
                 <Users size={17} />
               </button>
-              <button onClick={handleDeleteQuiz} className="qw-icon-btn danger" title="Delete Quiz">
+              <button onClick={() => setDeleteConfirmOpen(true)} className="qw-icon-btn danger" title="Delete Quiz">
                 <Trash2 size={17} />
               </button>
             </div>
@@ -415,10 +424,23 @@ export default function QuizWorkspace() {
           <h2 className="qw-section-title">Questions</h2>
           <div className="qw-section-actions">
             {selectedQuestionIds.size > 0 && (
-              <button onClick={handleDeleteQuestions} className="qw-btn qw-btn-danger">
-                <Trash2 size={14} /> Delete ({selectedQuestionIds.size})
-              </button>
+              <>
+                <button
+                  onClick={() => setDeleteQuestionsOpen(true)}
+                  className="qw-btn qw-btn-danger"
+                >
+                  <Trash2 size={14} /> Delete ({selectedQuestionIds.size})
+                </button>
+
+                <button
+                  onClick={() => setSelectedQuestionIds(new Set())}
+                  className="qw-btn qw-btn-secondary"
+                >
+                  Clear Selection
+                </button>
+              </>
             )}
+
             <button
               onClick={handleStartQuiz}
               disabled={isRunning || questions.length === 0}
@@ -429,7 +451,11 @@ export default function QuizWorkspace() {
                 : <><Zap size={14} /> Start Quiz</>
               }
             </button>
-            <button onClick={() => openQuestionModal()} className="qw-btn qw-btn-primary">
+
+            <button
+              onClick={() => openQuestionModal()}
+              className="qw-btn qw-btn-primary"
+            >
               <PlusCircle size={14} /> Add Question
             </button>
           </div>
@@ -484,6 +510,24 @@ export default function QuizWorkspace() {
               <textarea value={quizFormData.Description}
                 onChange={e => setQuizFormData({ ...quizFormData, Description: e.target.value })}
                 className="qw-modal-textarea" placeholder="Brief description…" />
+            </div>
+            <div className="qw-modal-field">
+              <label className="qw-modal-label">Start Time</label>
+              <input
+                type="datetime-local"
+                value={quiz.startTime
+                  ? new Date(new Date(quiz.startTime).getTime() - new Date(quiz.startTime).getTimezoneOffset() * 60000)
+                    .toISOString()
+                    .slice(0, 16)
+                  : ''}
+                onChange={e =>
+                  setQuizFormData(prev => ({
+                    ...prev,
+                    startTime: e.target.value
+                  }))
+                }
+                className="qw-modal-input"
+              />
             </div>
             <button type="submit" className="qw-modal-submit">Save Changes</button>
           </form>
@@ -548,6 +592,70 @@ export default function QuizWorkspace() {
               {editingQuestionId ? 'Update Question' : 'Add Question →'}
             </button>
           </form>
+        </Modal>
+
+        {/* Delete Quiz */}
+        <Modal
+          isOpen={isDeleteConfirmOpen}
+          onClose={() => setDeleteConfirmOpen(false)}
+          title="Delete Quiz"
+        >
+          <div className="space-y-5">
+            <p className="text-gray-300 text-sm">
+              Are you sure you want to delete this quiz? This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={async () => {
+                  await handleDeleteQuiz();
+                  setDeleteConfirmOpen(false);
+                }}
+                className="qw-btn qw-btn-danger"
+              >
+                Delete
+              </button>
+
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="qw-btn qw-btn-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Delete Questions */}
+        <Modal
+          isOpen={isDeleteQuestionsOpen}
+          onClose={() => setDeleteQuestionsOpen(false)}
+          title="Delete Question (s)"
+        >
+          <div className="space-y-5">
+            <p className="text-gray-300 text-sm">
+              Confirm delete {selectedQuestionIds.size} question(s) ? This action can not be undone!!
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={async () => {
+                  await handleDeleteQuestions();
+                  setDeleteQuestionsOpen(false);
+                }}
+                className="qw-btn qw-btn-danger"
+              >
+                Delete
+              </button>
+
+              <button
+                onClick={() => setDeleteQuestionsOpen(false)}
+                className="qw-btn qw-btn-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </Modal>
       </div>
     </>
