@@ -27,13 +27,13 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-md' 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className={`bg-white rounded-2xl shadow-xl w-full ${maxWidth} pointer-events-auto flex flex-col max-h-[90vh]`}
+              className={`bg-gray-900 rounded-2xl shadow-xl w-full ${maxWidth} pointer-events-auto flex flex-col max-h-[90vh]`}
             >
-              <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+              <div className="flex items-center justify-between p-5 border-b border-gray-800">
+                <h2 className="text-xl font-bold text-white">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-full transition-colors"
                 >
                   <X size={20} />
                 </button>

@@ -31,7 +31,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex h-64 w-full items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
       </div>
     );
   }
@@ -40,8 +40,8 @@ export default function Dashboard() {
     <div>
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Your Quizzes</h1>
-          <p className="text-gray-500 mt-1">Manage and create new interactive experiences.</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Your Quizzes</h1>
+          <p className="text-gray-400 mt-1">Manage and create new interactive experiences.</p>
         </div>
       </div>
 
@@ -57,9 +57,9 @@ export default function Dashboard() {
         >
           <Link
             to="/quiz/create"
-            className="bg-gray-200 border-2 border-dashed border-indigo-200 rounded-2xl h-full min-h-[320px] flex flex-col items-center justify-center text-indigo-600 hover:bg-indigo-100 hover:border-indigo-300 transition-all group"
+            className="bg-gray-700 border-2 border-dashed border-indigo-800 rounded-2xl h-full min-h-[320px] flex flex-col items-center justify-center text-indigo-400 hover:bg-indigo-100 hover:border-indigo-300 transition-all group"
           >
-            <div className="bg-gray-200 p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
+            <div className="bg-gray-700 p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
               <Plus size={32} />
             </div>
             <span className="font-bold text-lg">Create New Quiz</span>
@@ -69,11 +69,11 @@ export default function Dashboard() {
 
       {quizzes.length === 0 && !loading && (
         <div className="text-center mt-20">
-          <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-gray-800 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-4xl">📭</span>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">No quizzes yet</h3>
-          <p className="text-gray-500 max-w-sm mx-auto">
+          <h3 className="text-xl font-bold text-white mb-2">No quizzes yet</h3>
+          <p className="text-gray-400 max-w-sm mx-auto">
             You haven't created any quizzes. Click the create button to get started!
           </p>
         </div>

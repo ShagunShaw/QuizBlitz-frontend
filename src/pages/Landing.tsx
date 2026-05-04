@@ -14,25 +14,25 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-gray-950 flex flex-col justify-center items-center p-4">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center"
+        className="max-w-md w-full bg-gray-900 rounded-3xl shadow-xl p-8 text-center"
       >
         <div className="mb-8">
           <div className="bg-indigo-600 text-white w-20 h-20 rounded-2xl mx-auto flex items-center justify-center font-bold text-4xl shadow-lg mb-6 transform -rotate-6">
             QB
           </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
-            Quiz<span className="text-indigo-600">Blitz</span>
+          <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">
+            Quiz<span className="text-indigo-400">Blitz</span>
           </h1>
-          <p className="text-gray-500 font-medium">Create, play, and share interactive quizzes</p>
+          <p className="text-gray-400 font-medium">Create, play, and share interactive quizzes</p>
         </div>
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full cursor-pointer bg-white border-2 border-gray-200 text-gray-700 font-bold text-lg py-4 px-6 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
+          className="w-full cursor-pointer bg-gray-900 border-2 border-gray-700 text-gray-200 font-bold text-lg py-4 px-6 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-800 hover:border-gray-500 transition-all shadow-sm group"
         >
           <img
             src="https://www.svgrepo.com/show/475656/google-color.svg"

@@ -19,9 +19,9 @@ export default function AcceptInvite() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-      <h2 className="text-2xl font-bold text-gray-900">Setting up your account...</h2>
-      <p className="text-gray-500 mt-2">Please wait while we process your invitation.</p>
+      <Loader2 className="w-12 h-12 text-indigo-400 animate-spin mb-4" />
+      <h2 className="text-2xl font-bold text-white">Setting up your account...</h2>
+      <p className="text-gray-400 mt-2">Please wait while we process your invitation.</p>
     </div>
   );
 }

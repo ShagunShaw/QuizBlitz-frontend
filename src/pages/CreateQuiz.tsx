@@ -40,7 +40,7 @@ export default function CreateQuiz() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <Link to="/dashboard" className="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 font-medium w-fit">
+        <Link to="/dashboard" className="text-indigo-400 hover:text-indigo-800 flex items-center gap-2 font-medium w-fit">
           <ArrowLeft size={20} /> Back to Dashboard
         </Link>
       </div>
@@ -48,7 +48,7 @@ export default function CreateQuiz() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+        className="bg-gray-900 rounded-2xl shadow-sm border border-gray-800 overflow-hidden"
       >
         <div className="bg-indigo-600 p-6 sm:p-8 text-white">
           <h1 className="text-3xl font-extrabold tracking-tight mb-2">Create New Quiz</h1>
@@ -57,26 +57,26 @@ export default function CreateQuiz() {
 
         <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Quiz Title *</label>
+            <label className="block text-sm font-bold text-gray-200 mb-2">Quiz Title *</label>
             <input
               required
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-gray-50 focus:bg-white"
+              className="w-full px-4 py-3 rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-gray-950 focus:bg-white"
               placeholder="e.g. JavaScript Fundamentals"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-gray-200 mb-2">
               Description <span className="text-gray-400 font-normal">(Max 150 chars)</span>
             </label>
             <textarea
               maxLength={150}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-gray-50 focus:bg-white resize-none h-24"
+              className="w-full px-4 py-3 rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-gray-950 focus:bg-white resize-none h-24"
               placeholder="Brief description of what the quiz covers..."
             />
             <div className="text-right text-xs text-gray-400 mt-1 font-medium">
@@ -86,7 +86,7 @@ export default function CreateQuiz() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Start Time</label>
+              <label className="block text-sm font-bold text-gray-200 mb-2">Start Time</label>
               <div className="relative">
                 <input
                   type="datetime-local"
@@ -94,7 +94,7 @@ export default function CreateQuiz() {
                   disabled={formData.isPermanent}
                   value={formData.startTime}
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${formData.isPermanent ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-50 focus:bg-white'}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${formData.isPermanent ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-gray-950 focus:bg-white'}`}
                 />
                 {!formData.isPermanent && !formData.startTime && (
                   <CalendarIcon className="absolute right-4 top-3.5 text-gray-400 pointer-events-none" size={20} />
@@ -103,7 +103,7 @@ export default function CreateQuiz() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Permanent Quiz</label>
+              <label className="block text-sm font-bold text-gray-200 mb-2">Permanent Quiz</label>
               <div className="flex items-center h-[50px]">
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -118,8 +118,8 @@ export default function CreateQuiz() {
                       });
                     }}
                   />
-                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
-                  <span className="ml-3 text-sm font-medium text-gray-700">
+                  <div className="w-14 h-7 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
+                  <span className="ml-3 text-sm font-medium text-gray-200">
                     {formData.isPermanent ? 'Yes (Always open)' : 'No (Scheduled)'}
                   </span>
                 </label>
@@ -127,7 +127,7 @@ export default function CreateQuiz() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-100">
+          <div className="pt-6 border-t border-gray-800">
             <button
               type="submit"
               disabled={loading}

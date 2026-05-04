@@ -246,18 +246,18 @@ export default function QuizWorkspace() {
     }
   };
 
-  if (loading) return <div className="flex h-64 justify-center items-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-600" /></div>;
+  if (loading) return <div className="flex h-64 justify-center items-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-400" /></div>;
   if (!quiz) return null;
 
   return (
     <div>
       <div className="mb-4">
-        <Link to="/dashboard" className="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 font-medium w-fit">
+        <Link to="/dashboard" className="text-indigo-400 hover:text-indigo-800 flex items-center gap-2 font-medium w-fit">
           <ArrowLeft size={20} /> Back
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+      <div className="bg-gray-900 rounded-2xl shadow-sm border border-gray-700 overflow-hidden mb-8">
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white flex justify-between items-start">
           <div>
             <div className="inline-block bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-bold border border-white/30 mb-3">
@@ -278,20 +278,20 @@ export default function QuizWorkspace() {
             </button>
           </div>
         </div>
-        <div className="bg-gray-50 p-4 flex gap-6 text-sm font-medium text-gray-600 border-t border-gray-100">
-          <div>Questions: <span className="text-gray-900 font-bold">{questions.length}</span></div>
-          {/* <div>Total Points: <span className="text-gray-900 font-bold">{questions.length * 10 || 0}</span></div> */}
-          <div>Status: <span className={`px-2 py-0.5 rounded text-xs font-bold ${quiz.isPermanent ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{quiz.isPermanent ? 'Permanent' : 'Scheduled'}</span></div>
+        <div className="bg-gray-950 p-4 flex gap-6 text-sm font-medium text-gray-300 border-t border-gray-800">
+          <div>Questions: <span className="text-white font-bold">{questions.length}</span></div>
+          {/* <div>Total Points: <span className="text-white font-bold">{questions.length * 10 || 0}</span></div> */}
+          <div>Status: <span className={`px-2 py-0.5 rounded text-xs font-bold ${quiz.isPermanent ? 'bg-green-100 text-green-300' : 'bg-orange-900/50 text-orange-300'}`}>{quiz.isPermanent ? 'Permanent' : 'Scheduled'}</span></div>
         </div>
       </div>
 
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           Questions
         </h2>
         <div className="flex gap-3">
           {selectedQuestionIds.size > 0 && (
-            <button onClick={handleDeleteQuestions} className="px-4 py-2 bg-red-50 text-red-600 font-bold rounded-lg hover:bg-red-100 flex items-center gap-2 transition-colors">
+            <button onClick={handleDeleteQuestions} className="px-4 py-2 bg-red-900/30 text-red-400 font-bold rounded-lg hover:bg-red-100 flex items-center gap-2 transition-colors">
               <Trash2 size={18} /> Delete Selected ({selectedQuestionIds.size})
             </button>
           )}
@@ -313,11 +313,11 @@ export default function QuizWorkspace() {
           {isRunning ? "Quiz Running..." : "🚀 Start Quiz"}
         </button>
         {questions.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">No questions yet</h3>
-            <p className="text-gray-500 mb-4">Start adding questions to your quiz!</p>
+          <div className="text-center py-12 bg-gray-900 rounded-2xl border border-dashed border-gray-600">
+            <h3 className="text-lg font-bold text-white mb-1">No questions yet</h3>
+            <p className="text-gray-400 mb-4">Start adding questions to your quiz!</p>
 
-            <button onClick={() => openQuestionModal()} className="px-4 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-lg hover:bg-indigo-100 transition-colors">
+            <button onClick={() => openQuestionModal()} className="px-4 py-2 bg-indigo-900/30 text-indigo-300 font-bold rounded-lg hover:bg-indigo-100 transition-colors">
               Add First Question
             </button>
           </div>
@@ -348,11 +348,11 @@ export default function QuizWorkspace() {
       <Modal isOpen={isEditQuizModalOpen} onClose={() => setEditQuizModalOpen(false)} title="Edit Quiz Settings">
         <form onSubmit={handleUpdateQuiz} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-bold text-gray-200 mb-1">Title</label>
             <input required type="text" value={quizFormData.Title} onChange={e => setQuizFormData({ ...quizFormData, Title: e.target.value })} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-bold text-gray-200 mb-1">Description</label>
             <textarea value={quizFormData.Description} onChange={e => setQuizFormData({ ...quizFormData, Description: e.target.value })} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
           </div>
           <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Save Changes</button>
@@ -362,7 +362,7 @@ export default function QuizWorkspace() {
       <Modal isOpen={isCohostModalOpen} onClose={() => setCohostModalOpen(false)} title="Add Co-host">
         <form onSubmit={handleAddCohost} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Co-host Email</label>
+            <label className="block text-sm font-bold text-gray-200 mb-1">Co-host Email</label>
             <input required type="email" value={cohostEmail} onChange={e => setCohostEmail(e.target.value)} placeholder="colleague@example.com" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" />
           </div>
           <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Send Invite</button>
@@ -372,14 +372,14 @@ export default function QuizWorkspace() {
       <Modal isOpen={isQuestionModalOpen} onClose={() => setQuestionModalOpen(false)} title={editingQuestionId ? 'Edit Question' : 'Add Question'} maxWidth="max-w-2xl">
         <form onSubmit={handleSaveQuestion} className="space-y-5">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Question Text</label>
+            <label className="block text-sm font-bold text-gray-200 mb-1">Question Text</label>
             <input required type="text" value={questionFormData.question} onChange={e => setQuestionFormData({ ...questionFormData, question: e.target.value })} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 font-medium text-lg" placeholder="What is 2 + 2?" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {questionFormData.options.map((opt, i) => (
-              <div key={i} className={`p-3 border-2 rounded-xl flex items-center gap-3 transition-colors ${questionFormData.correctOption === i ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
-                <input type="radio" name="correctOption" checked={questionFormData.correctOption === i} onChange={() => setQuestionFormData({ ...questionFormData, correctOption: i })} className="w-5 h-5 text-green-600" />
+              <div key={i} className={`p-3 border-2 rounded-xl flex items-center gap-3 transition-colors ${questionFormData.correctOption === i ? 'border-green-500 bg-green-900/30' : 'border-gray-700'}`}>
+                <input type="radio" name="correctOption" checked={questionFormData.correctOption === i} onChange={() => setQuestionFormData({ ...questionFormData, correctOption: i })} className="w-5 h-5 text-green-400" />
                 <input required type="text" value={opt.text} onChange={e => {
                   const newOpts = [...questionFormData.options];
                   newOpts[i].text = e.target.value;
@@ -391,7 +391,7 @@ export default function QuizWorkspace() {
 
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-bold text-gray-700 mb-1">Time Limit (s)</label>
+              <label className="block text-sm font-bold text-gray-200 mb-1">Time Limit (s)</label>
               <select
                 value={questionFormData.time}
                 onChange={e =>

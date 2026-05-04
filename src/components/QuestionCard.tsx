@@ -25,7 +25,7 @@ export const QuestionCard = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-xl shadow-sm border-2 transition-all ${isSelected ? 'border-indigo-500 shadow-md' : 'border-gray-100 hover:border-gray-200'
+      className={`bg-gray-900 rounded-xl shadow-sm border-2 transition-all ${isSelected ? 'border-indigo-500 shadow-md' : 'border-gray-800 hover:border-gray-600'
         } p-5 relative group`}
     >
       <div className="flex gap-4">
@@ -35,7 +35,7 @@ export const QuestionCard = ({
               type="checkbox"
               checked={isSelected}
               onChange={(e) => onSelect(qId as string, e.target.checked)}
-              className="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+              className="w-5 h-5 text-indigo-400 rounded border-gray-600 focus:ring-indigo-500 cursor-pointer"
             />
           </div>
         )}
@@ -45,8 +45,8 @@ export const QuestionCard = ({
 
             {/* Left Side */}
             <div className="flex-1 min-w-0">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-sm shrink-0">
+              <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <span className="bg-gray-800 text-gray-300 px-2.5 py-1 rounded-md text-sm shrink-0">
                   Q{index + 1}
                 </span>
 
@@ -57,7 +57,7 @@ export const QuestionCard = ({
             </div>
 
             {/* Fixed Timer */}
-            <div className="shrink-0 px-3 py-1 bg-orange-50 text-orange-700 rounded-md text-sm font-semibold whitespace-nowrap">
+            <div className="shrink-0 px-3 py-1 bg-orange-900/30 text-orange-300 rounded-md text-sm font-semibold whitespace-nowrap">
               ⏱ {question.time}s
             </div>
 
@@ -66,7 +66,7 @@ export const QuestionCard = ({
               {onEdit && (
                 <button
                   onClick={() => onEdit(question)}
-                  className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                  className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-900/50 rounded-md transition-colors"
                 >
                   <Edit2 size={18} />
                 </button>
@@ -75,7 +75,7 @@ export const QuestionCard = ({
               {onDelete && qId && (
                 <button
                   onClick={() => onDelete(qId)}
-                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-900/50 rounded-md transition-colors"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -89,23 +89,23 @@ export const QuestionCard = ({
               <div
                 key={i}
                 className={`p-3 rounded-lg border-2 flex items-center gap-3 ${i === question.correctOption
-                  ? 'bg-green-50 border-green-200 text-green-800 font-medium'
-                  : 'bg-gray-50 border-transparent text-gray-700'
+                  ? 'bg-green-900/30 border-green-800 text-green-300 font-medium'
+                  : 'bg-gray-950 border-transparent text-gray-200'
                   }`}
               >
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${i === question.correctOption ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${i === question.correctOption ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-300'
                   }`}>
                   {String.fromCharCode(65 + i)}
                 </div>
                 <span>{typeof opt === "string" ? opt : opt.text}</span>
                 {i === question.correctOption && (
-                  <CheckCircle2 size={18} className="text-green-500 ml-auto" />
+                  <CheckCircle2 size={18} className="text-green-400 ml-auto" />
                 )}
               </div>
             ))}
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-500 font-medium pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-4 text-sm text-gray-400 font-medium pt-3 border-t border-gray-800">
             <div className="flex items-center gap-1.5">
               {/* <div className="w-4 h-4 rounded-full bg-yellow-100 flex items-center justify-center border border-yellow-300 text-yellow-600 text-[10px] font-bold">P</div>
               10 points */}
