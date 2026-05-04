@@ -310,7 +310,7 @@ export default function QuizWorkspace() {
              disabled:opacity-50 disabled:cursor-not-allowed 
              flex items-center gap-2"
         >
-          {isRunning ? "Quiz Running..." : "🚀 Start Quiz"}
+          {isRunning ? "Quiz Running..." : " Start Quiz"}
         </button>
         {questions.length === 0 ? (
           <div className="text-center py-12 bg-gray-900 rounded-2xl border border-dashed border-gray-600">
