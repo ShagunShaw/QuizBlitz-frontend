@@ -6,6 +6,8 @@ import QuizWorkspace from '../pages/QuizWorkspace';
 import AcceptInvite from '../pages/AcceptInvite';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { Layout } from '../components/Layout';
+import PlayQuiz from "../pages/PlayQuiz";
+import JoinQuiz from "../pages/JoinQuiz";
 
 export const AppRoutes = () => {
   return (
@@ -54,6 +56,8 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route path="/join" element={<JoinQuiz />} />
+      <Route path="/play/:roomCode" element={<PlayQuiz />} />
     </Routes>
   );
 };

@@ -9,20 +9,9 @@ export default function AcceptInvite() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const acceptInvite = async () => {
-      try {
-        await api.get(`/accept/${token}`);
-        toast.success('Successfully joined as co-host!');
-      } catch (error) {
-        // Error toast is handled by interceptor, but we still catch it here
-        console.error('Error accepting invite:', error);
-      } finally {
-        navigate('/dashboard');
-      }
-    };
-
     if (token) {
-      acceptInvite();
+      const origin = window.location.origin;
+      window.location.href = `${import.meta.env.VITE_API_URL}/co-host/accept/${token}?origin=${encodeURIComponent(origin)}`;
     } else {
       navigate('/dashboard');
     }

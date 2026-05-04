@@ -25,6 +25,7 @@ export const Navbar = () => {
           </Link>
 
           {user && (
+
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
                 <img
@@ -36,12 +37,18 @@ export const Navbar = () => {
                   {user.name || user.email.split('@')[0]}
                 </span>
               </div>
+              <Link to="/join">
+                <button className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">
+                  Join Quiz
+                </button>
+              </Link>
               <button
                 onClick={handleLogout}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors flex items-center justify-center"
+                className="px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-semibold"
                 title="Logout"
               >
-                <LogOut size={20} />
+                <LogOut size={18} />
+                <span >Logout</span>
               </button>
             </div>
           )}

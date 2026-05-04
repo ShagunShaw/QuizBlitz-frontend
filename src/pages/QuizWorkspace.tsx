@@ -6,6 +6,7 @@ import { QuestionCard } from '../components/QuestionCard';
 import { Modal } from '../components/Modal';
 import { Loader2, Plus, Edit3, Trash2, ArrowLeft, Users, Settings, PlusCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { socket, connectSocket } from "../services/socket";
 
 export default function QuizWorkspace() {
   const emptyQuestion = {
@@ -22,6 +23,7 @@ export default function QuizWorkspace() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
+  const [isRunning, setIsRunning] = useState(false);
 
   // Modals state
   const [isEditQuizModalOpen, setEditQuizModalOpen] = useState(false);
@@ -33,10 +35,20 @@ export default function QuizWorkspace() {
   const [questionFormData, setQuestionFormData] = useState<Question>(emptyQuestion);
   const [cohostEmail, setCohostEmail] = useState('');
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
-
   useEffect(() => {
     fetchQuiz();
   }, [quizId]);
+
+  useEffect(() => {
+    if (!quiz?.roomCode) return;
+
+    connectSocket();
+
+    socket.emit("hostJoinRoom", { roomCode: quiz.roomCode });
+
+    console.log("Host joined:", quiz.roomCode);
+
+  }, [quiz?.roomCode]);
 
   const fetchQuiz = async () => {
     try {
@@ -69,6 +81,7 @@ export default function QuizWorkspace() {
   };
 
 
+
   // --- Quiz Handlers ---
   const handleUpdateQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +110,57 @@ export default function QuizWorkspace() {
       console.error(error);
     }
   };
+  const handleStartQuiz = () => {
+    if (!quiz || !quiz.Questions || quiz.Questions.length === 0) {
+      alert("No questions available");
+      return;
+    }
 
+    if (isRunning) return; // prevent double start
+    setIsRunning(true);
+
+    runQuiz(0);
+  };
+  const runQuiz = (index: number) => {
+    if (!quiz) return;
+
+    // 🏁 End condition
+    if (index >= quiz.Questions.length) {
+      console.log("🏁 Quiz finished");
+
+      socket.emit("endQuiz", {
+        roomCode: quiz.roomCode
+      });
+
+      setIsRunning(false);
+      return;
+    }
+
+    const q = quiz.Questions[index];
+
+    const questionData = {
+      question: q.question,
+      options: q.options,
+      correctOption: q.correctOption,
+      time: q.time || 30,
+      questionNo: index + 1
+    };
+
+    // 🚀 Send question
+    socket.emit("publishQuestion", {
+      roomCode: quiz.roomCode,
+      questionData
+    });
+
+    console.log("📤 Sent Q:", index + 1);
+
+    // ⏱ WAIT → then next question
+    const delay = (questionData.time + 3) * 1000;
+
+    setTimeout(() => {
+      runQuiz(index + 1);
+    }, delay);
+  };
   // --- Question Handlers ---
   const handleSaveQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,10 +302,21 @@ export default function QuizWorkspace() {
       </div>
 
       <div className="space-y-4">
+        <button
+          onClick={handleStartQuiz}
+          disabled={isRunning || questions.length === 0}
+          className="px-5 py-2.5 bg-green-600 text-white font-bold rounded-lg shadow-sm 
+             hover:bg-green-700 active:scale-95 transition-all 
+             disabled:opacity-50 disabled:cursor-not-allowed 
+             flex items-center gap-2"
+        >
+          {isRunning ? "Quiz Running..." : "🚀 Start Quiz"}
+        </button>
         {questions.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
             <h3 className="text-lg font-bold text-gray-900 mb-1">No questions yet</h3>
             <p className="text-gray-500 mb-4">Start adding questions to your quiz!</p>
+
             <button onClick={() => openQuestionModal()} className="px-4 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-lg hover:bg-indigo-100 transition-colors">
               Add First Question
             </button>
