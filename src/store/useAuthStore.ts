@@ -18,7 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: async () => {
     try {
       const response = await api.get('/');
-      set({ user: response.data.user, isAuthenticated: true, isLoading: false });
+      set({ user: response.data.data, isAuthenticated: true, isLoading: false });
     } catch (error) {
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
@@ -26,10 +26,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await api.post('/logout/');
-      set({ user: null, isAuthenticated: false });
-    } catch (error) {
-      console.error('Logout failed:', error);
+      await api.post('/logout');
+    } catch (err) {
+      console.log("Logout failed, but continuing anyway");
+    } finally {
+      // 🔥 FORCE RESET STATE
+      set({
+        user: null,
+        isAuthenticated: false
+      });
     }
-  },
+  }
 }));
