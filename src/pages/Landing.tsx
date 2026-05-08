@@ -215,14 +215,16 @@ export default function Landing() {
 
         .hero-title {
           font-family: 'Syne', sans-serif;
-          font-size: clamp(48px, 8vw, 96px);
-          font-weight: 800;
-          line-height: 1.02;
-          letter-spacing: -2px;
+          font-size: clamp(48px, 8vw, 90px);
+          font-weight: 10;
+          line-height: 1.08;                 /* slightly relaxed for readability */
+          letter-spacing: clamp(-1px, -0.5vw, -2px);  /* responsive tracking */
           color: #fff;
           margin-bottom: 24px;
           animation: fadeDown 0.6s 0.1s ease both;
+          max-width: 900px;                 /* prevents over-stretch on large screens */
         }
+
         .hero-title .accent {
           background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
           -webkit-background-clip: text;
@@ -469,8 +471,8 @@ export default function Landing() {
           </div>
 
           <h1 className="hero-title">
-            Quizzes that make<br />
-            <span className="accent">people feel alive</span>
+            Quizzes that spark<br />
+            <span className="accent">real excitement</span>
           </h1>
 
           <p className="hero-sub">
@@ -482,7 +484,6 @@ export default function Landing() {
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
               Sign in with Google
             </button>
-            <button className="btn-secondary">Watch demo ▶</button>
           </div>
 
           {/* Mockup */}
@@ -519,13 +520,6 @@ export default function Landing() {
               </div>
             </div>
           </div>
-
-          {/* Stats */}
-          <div className="stats">
-            <div className="stat"><div className="stat-num"><Counter target={12400} suffix="+" /></div><div className="stat-label">Quizzes hosted</div></div>
-            <div className="stat"><div className="stat-num"><Counter target={340000} suffix="+" /></div><div className="stat-label">Players competed</div></div>
-            <div className="stat"><div className="stat-num"><Counter target={98} suffix="%" /></div><div className="stat-label">Uptime SLA</div></div>
-          </div>
         </section>
 
         {/* ── FEATURES ── */}
@@ -538,27 +532,6 @@ export default function Landing() {
                 <div className="feature-icon">{f.icon}</div>
                 <div className="feature-title">{f.title}</div>
                 <div className="feature-desc">{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── TESTIMONIALS ── */}
-        <div className="section" style={{ paddingTop: 0 }}>
-          <div className="section-label">From the community</div>
-          <div className="section-title">People who've felt the difference</div>
-          <div className="testimonials-grid">
-            {TESTIMONIALS.map((t) => (
-              <div className="testi-card" key={t.name}>
-                <div className="testi-quote">"</div>
-                <div className="testi-text">{t.text}</div>
-                <div className="testi-author">
-                  <div className="testi-avatar">{t.name[0]}</div>
-                  <div>
-                    <div className="testi-name">{t.name}</div>
-                    <div className="testi-role">{t.role}</div>
-                  </div>
-                </div>
               </div>
             ))}
           </div>

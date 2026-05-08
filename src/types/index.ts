@@ -27,9 +27,9 @@ export interface Quiz {
   isPermanent: boolean;
   creator: string | User;
   coHosts?: User[];
-  questions?: Question[];
+  Questions?: Question[];
   totalPoints?: number;
-  questionCount?: number;
+  QuestionsCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
