@@ -6,7 +6,8 @@ import { QuestionCard } from '../components/QuestionCard';
 import { Modal } from '../components/Modal';
 import {
   Loader2, Edit3, Trash2, ArrowLeft, Users, PlusCircle,
-  Play, Hash, Infinity, Clock, HelpCircle, Zap
+  Play, Hash, Infinity, Clock, HelpCircle, Zap, Share2,
+  LogOut, Copy, Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { socket, connectSocket } from '../services/socket';
@@ -29,14 +30,20 @@ export default function QuizWorkspace() {
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
   const [isRunning, setIsRunning] = useState(false);
 
+  //  NEW: track whether current user is owner
+  const [isOwner, setIsOwner] = useState(false);
+
   const [isEditQuizModalOpen, setEditQuizModalOpen] = useState(false);
   const [isQuestionModalOpen, setQuestionModalOpen] = useState(false);
   const [isCohostModalOpen, setCohostModalOpen] = useState(false);
+  const [isShareModalOpen, setShareModalOpen] = useState(false);
+  const [isLeaveModalOpen, setLeaveModalOpen] = useState(false);
 
   const [quizFormData, setQuizFormData] = useState({ Title: '', Description: '', startTime: '', isPermanent: false });
   const [questionFormData, setQuestionFormData] = useState<Question>(emptyQuestion);
   const [cohostEmail, setCohostEmail] = useState('');
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => { fetchQuiz(); }, [quizId]);
 
@@ -51,6 +58,8 @@ export default function QuizWorkspace() {
       setLoading(true);
       const res = await api.get(`/quiz/${quizId}/`);
       const quizData = res.data.data.quiz;
+      // ✅ FIX: store isOwner from API response
+      setIsOwner(res.data.data.isOwner);
       setQuiz(quizData);
       setQuestions(quizData.Questions || []);
       setQuizFormData({
@@ -78,10 +87,19 @@ export default function QuizWorkspace() {
   };
 
   const handleDeleteQuiz = async () => {
-    if (!window.confirm('Are you sure you want to delete this quiz?')) return;
+    if (!window.confirm('Are you sure you want to delete this quiz? This cannot be undone.')) return;
     try {
       await api.delete(`/quiz/${quizId}/`);
       toast.success('Quiz deleted');
+      navigate('/dashboard');
+    } catch (error) { console.error(error); }
+  };
+
+  // NEW: co-host leave quiz
+  const handleLeaveQuiz = async () => {
+    try {
+      await api.delete(`/co-host/${quizId}/leave`);
+      toast.success('You have left the quiz');
       navigate('/dashboard');
     } catch (error) { console.error(error); }
   };
@@ -101,7 +119,13 @@ export default function QuizWorkspace() {
       return;
     }
     const q = quiz.Questions[index];
-    const questionData = { question: q.question, options: q.options, correctOption: q.correctOption, time: q.time || 30, questionNo: index + 1 };
+    const questionData = {
+      question: q.question,
+      options: q.options,
+      correctOption: q.correctOption,
+      time: q.time || 30,
+      questionNo: index + 1,
+    };
     socket.emit('publishQuestion', { roomCode: quiz.roomCode, questionData });
     setTimeout(() => runQuiz(index + 1), (questionData.time + 3) * 1000);
   };
@@ -168,6 +192,20 @@ export default function QuizWorkspace() {
     } catch (error) { console.error(error); }
   };
 
+  //  NEW: share link — frontend /play/:roomCode route
+  const shareLink = quiz ? `${window.location.origin}/play/${quiz.roomCode}` : '';
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+      toast.success('Link copied!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy link');
+    }
+  };
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
       <Loader2 style={{ color: '#6366f1', width: 40, height: 40 }} className="animate-spin" />
@@ -182,7 +220,6 @@ export default function QuizWorkspace() {
 
         .qw-wrap { font-family: 'Outfit', sans-serif; max-width: 900px; margin: 0 auto; padding: 0 16px 80px; }
 
-        /* ── Back ── */
         .qw-back {
           display: inline-flex; align-items: center; gap: 8px;
           color: #818cf8; font-size: 14px; font-weight: 600;
@@ -191,7 +228,6 @@ export default function QuizWorkspace() {
         }
         .qw-back:hover { color: #a5b4fc; gap: 12px; }
 
-        /* ── Hero card ── */
         .qw-hero {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(255,255,255,0.07);
@@ -226,7 +262,7 @@ export default function QuizWorkspace() {
         }
         .qw-hero-desc { font-size: 14px; color: #6b7280; margin: 0; line-height: 1.6; max-width: 520px; }
 
-        .qw-hero-actions { display: flex; gap: 8px; flex-shrink: 0; position: relative; z-index: 1; }
+        .qw-hero-actions { display: flex; gap: 8px; flex-shrink: 0; position: relative; z-index: 1; align-items: center; }
 
         .qw-icon-btn {
           display: flex; align-items: center; justify-content: center;
@@ -237,6 +273,8 @@ export default function QuizWorkspace() {
         .qw-icon-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         .qw-icon-btn.danger { background: rgba(239,68,68,0.12); color: #f87171; }
         .qw-icon-btn.danger:hover { background: rgba(239,68,68,0.25); }
+        .qw-icon-btn.share { background: rgba(99,102,241,0.12); color: #a5b4fc; }
+        .qw-icon-btn.share:hover { background: rgba(99,102,241,0.25); color: #c7d2fe; }
 
         /* ── Stats bar ── */
         .qw-stats-bar {
@@ -258,7 +296,15 @@ export default function QuizWorkspace() {
           background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2); color: #fdba74;
         }
 
-        /* ── Section header ── */
+        /* ── Role badge ── */
+        .qw-role-badge {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-size: 11px; font-weight: 700; padding: 3px 10px;
+          border-radius: 100px; text-transform: uppercase; letter-spacing: 0.5px;
+          background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); color: #a5b4fc;
+        }
+
+        /* ── Section ── */
         .qw-section-header {
           display: flex; align-items: center; justify-content: space-between;
           margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
@@ -281,6 +327,12 @@ export default function QuizWorkspace() {
           box-shadow: 0 4px 16px rgba(99,102,241,0.25);
         }
         .qw-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.4); }
+
+        .qw-btn-ghost {
+          background: rgba(255,255,255,0.04); color: #9ca3af;
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+        .qw-btn-ghost:hover { background: rgba(255,255,255,0.08); color: #e8eaf0; }
 
         .qw-btn-danger {
           background: rgba(239,68,68,0.1); color: #f87171;
@@ -311,7 +363,7 @@ export default function QuizWorkspace() {
         .qw-empty h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 6px; }
         .qw-empty p { font-size: 14px; color: #4b5563; margin: 0 0 20px; }
 
-        /* ── Modal shared styles ── */
+        /* ── Modal fields ── */
         .qw-modal-field { display: flex; flex-direction: column; gap: 7px; }
         .qw-modal-label {
           font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -340,7 +392,42 @@ export default function QuizWorkspace() {
         }
         .qw-modal-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.4); }
 
-        /* ── Option cards in question modal ── */
+        /* ── Share link box ── */
+        .qw-share-box {
+          display: flex; align-items: center; gap: 0;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px; overflow: hidden;
+        }
+        .qw-share-url {
+          flex: 1; padding: 12px 14px;
+          font-size: 13px; font-weight: 500; color: #9ca3af;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          font-family: 'Outfit', sans-serif;
+        }
+        .qw-share-copy {
+          display: flex; align-items: center; gap: 6px;
+          padding: 12px 16px; border: none; cursor: pointer;
+          background: rgba(99,102,241,0.15); color: #a5b4fc;
+          font-size: 13px; font-weight: 700; font-family: 'Outfit', sans-serif;
+          border-left: 1px solid rgba(255,255,255,0.08);
+          transition: background 0.2s;
+          white-space: nowrap;
+        }
+        .qw-share-copy:hover { background: rgba(99,102,241,0.25); }
+        .qw-share-copy.copied { color: #86efac; background: rgba(34,197,94,0.12); }
+
+        /* ── Leave / Owner warning ── */
+        .qw-owner-warning {
+          background: rgba(251,146,60,0.08);
+          border: 1px solid rgba(251,146,60,0.2);
+          border-radius: 14px; padding: 16px 18px;
+          display: flex; align-items: flex-start; gap: 12px;
+          font-size: 14px; color: #fdba74; line-height: 1.6;
+        }
+        .qw-owner-warning-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+        /* ── Option cards ── */
         .qw-opt-card {
           display: flex; align-items: center; gap: 12px;
           padding: 12px 14px; border-radius: 14px;
@@ -362,7 +449,6 @@ export default function QuizWorkspace() {
         @media (max-width: 600px) {
           .qw-hero-header { flex-direction: column; padding: 24px 20px; }
           .qw-stats-bar { padding: 12px 20px; flex-wrap: wrap; gap: 12px; }
-          .qw-hero-actions { flex-direction: row; }
         }
       `}</style>
 
@@ -381,16 +467,40 @@ export default function QuizWorkspace() {
               <h1 className="qw-hero-title">{quiz.Title}</h1>
               {quiz.Description && <p className="qw-hero-desc">{quiz.Description}</p>}
             </div>
+
             <div className="qw-hero-actions">
-              <button onClick={() => setEditQuizModalOpen(true)} className="qw-icon-btn" title="Edit Quiz">
-                <Edit3 size={17} />
+              {/* Share — visible to both owner and co-host */}
+              <button onClick={() => setShareModalOpen(true)} className="qw-icon-btn share" title="Share Quiz Link">
+                <Share2 size={17} />
               </button>
-              <button onClick={() => setCohostModalOpen(true)} className="qw-icon-btn" title="Manage Co-hosts">
-                <Users size={17} />
-              </button>
-              <button onClick={handleDeleteQuiz} className="qw-icon-btn danger" title="Delete Quiz">
-                <Trash2 size={17} />
-              </button>
+
+              {/* Edit — owner only */}
+              {isOwner && (
+                <button onClick={() => setEditQuizModalOpen(true)} className="qw-icon-btn" title="Edit Quiz">
+                  <Edit3 size={17} />
+                </button>
+              )}
+
+              {/*  Co-host management — owner only */}
+              {isOwner && (
+                <button onClick={() => setCohostModalOpen(true)} className="qw-icon-btn" title="Manage Co-hosts">
+                  <Users size={17} />
+                </button>
+              )}
+
+              {/*  Delete — owner only */}
+              {isOwner && (
+                <button onClick={handleDeleteQuiz} className="qw-icon-btn danger" title="Delete Quiz">
+                  <Trash2 size={17} />
+                </button>
+              )}
+
+              {/*  Leave — co-host only */}
+              {!isOwner && (
+                <button onClick={() => setLeaveModalOpen(true)} className="qw-icon-btn danger" title="Leave Quiz">
+                  <LogOut size={17} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -407,6 +517,15 @@ export default function QuizWorkspace() {
                 </span>
               </span>
             </span>
+            {/*  Show role clearly */}
+            <span>
+              Role
+              <span style={{ marginLeft: 8 }}>
+                <span className="qw-role-badge">
+                  {isOwner ? '👑 Owner' : '🤝 Co-host'}
+                </span>
+              </span>
+            </span>
           </div>
         </motion.div>
 
@@ -419,16 +538,19 @@ export default function QuizWorkspace() {
                 <Trash2 size={14} /> Delete ({selectedQuestionIds.size})
               </button>
             )}
-            <button
-              onClick={handleStartQuiz}
-              disabled={isRunning || questions.length === 0}
-              className="qw-btn qw-btn-start"
-            >
-              {isRunning
-                ? <><Loader2 size={14} className="animate-spin" /> Running…</>
-                : <><Zap size={14} /> Start Quiz</>
-              }
-            </button>
+            {/* Start Quiz — owner only */}
+            {isOwner && (
+              <button
+                onClick={handleStartQuiz}
+                disabled={isRunning || questions.length === 0}
+                className="qw-btn qw-btn-start"
+              >
+                {isRunning
+                  ? <><Loader2 size={14} className="animate-spin" /> Running…</>
+                  : <><Zap size={14} /> Start Quiz</>
+                }
+              </button>
+            )}
             <button onClick={() => openQuestionModal()} className="qw-btn qw-btn-primary">
               <PlusCircle size={14} /> Add Question
             </button>
@@ -468,7 +590,7 @@ export default function QuizWorkspace() {
           )}
         </div>
 
-        {/* ── MODALS ── */}
+        {/* ════════════════ MODALS ════════════════ */}
 
         {/* Edit Quiz */}
         <Modal isOpen={isEditQuizModalOpen} onClose={() => setEditQuizModalOpen(false)} title="Edit Quiz Settings">
@@ -502,6 +624,42 @@ export default function QuizWorkspace() {
           </form>
         </Modal>
 
+        {/*  Share Link Modal */}
+        <Modal isOpen={isShareModalOpen} onClose={() => setShareModalOpen(false)} title="Share Quiz Link">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <p style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+              Share this link with participants. They can join directly without needing an account.
+            </p>
+            <div className="qw-share-box">
+              <span className="qw-share-url">{shareLink}</span>
+              <button className={`qw-share-copy ${copied ? 'copied' : ''}`} onClick={handleCopyLink}>
+                {copied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy</>}
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>
+              Room code: <strong style={{ color: '#a5b4fc', fontFamily: 'monospace' }}>{quiz.roomCode}</strong>
+            </p>
+          </div>
+        </Modal>
+
+        {/* Leave Quiz Modal — co-host only */}
+        <Modal isOpen={isLeaveModalOpen} onClose={() => setLeaveModalOpen(false)} title="Leave Quiz">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <p style={{ fontSize: 14, color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
+              Are you sure you want to leave <strong style={{ color: '#e8eaf0' }}>{quiz.Title}</strong>?
+              You'll lose co-host access and won't be able to manage this quiz anymore.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setLeaveModalOpen(false)} className="qw-btn qw-btn-ghost" style={{ flex: 1, justifyContent: 'center' }}>
+                Cancel
+              </button>
+              <button onClick={handleLeaveQuiz} className="qw-btn qw-btn-danger" style={{ flex: 1, justifyContent: 'center' }}>
+                <LogOut size={14} /> Leave Quiz
+              </button>
+            </div>
+          </div>
+        </Modal>
+
         {/* Question */}
         <Modal isOpen={isQuestionModalOpen} onClose={() => setQuestionModalOpen(false)}
           title={editingQuestionId ? 'Edit Question' : 'Add Question'} maxWidth="max-w-2xl">
@@ -512,7 +670,6 @@ export default function QuizWorkspace() {
                 onChange={e => setQuestionFormData({ ...questionFormData, question: e.target.value })}
                 className="qw-modal-input" placeholder="What is 2 + 2?" />
             </div>
-
             <div className="qw-modal-field">
               <label className="qw-modal-label">Options — select the correct one</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -532,7 +689,6 @@ export default function QuizWorkspace() {
                 ))}
               </div>
             </div>
-
             <div className="qw-modal-field" style={{ maxWidth: 200 }}>
               <label className="qw-modal-label">Time Limit</label>
               <select value={questionFormData.time}
@@ -543,7 +699,6 @@ export default function QuizWorkspace() {
                 ))}
               </select>
             </div>
-
             <button type="submit" className="qw-modal-submit">
               {editingQuestionId ? 'Update Question' : 'Add Question →'}
             </button>
