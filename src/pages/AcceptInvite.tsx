@@ -11,7 +11,9 @@ export default function AcceptInvite() {
   useEffect(() => {
     if (token) {
       const origin = window.location.origin;
-      window.location.href = `${import.meta.env.VITE_API_URL}/accept/${token}?origin=${encodeURIComponent(origin)}`;
+      setTimeout(() => {
+        window.location.href = `${import.meta.env.VITE_API_URL}/accept/${token}?origin=${encodeURIComponent(origin)}`
+      }, 5000)
     } else {
       navigate('/dashboard');
     }

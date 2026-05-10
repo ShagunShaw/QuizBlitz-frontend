@@ -49,11 +49,9 @@ export const AppRoutes = () => {
       <Route
         path="/accept/:token"
         element={
-          <ProtectedRoute>
             <Layout>
               <AcceptInvite />
             </Layout>
-          </ProtectedRoute>
         }
       />
       <Route path="/join" element={<JoinQuiz />} />

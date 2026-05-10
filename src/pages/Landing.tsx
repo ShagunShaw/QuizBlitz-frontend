@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { Navigate, Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 // ── Floating particle ──────────────────────────────────────────
 function Particle({ style }: { style: React.CSSProperties }) {
@@ -54,14 +55,9 @@ const FEATURES = [
   },
 ];
 
-const TESTIMONIALS = [
-  { name: 'Ritika S.', role: 'College Fest Organiser', text: '500 players, zero lag. The crowd went absolutely insane.' },
-  { name: 'Arjun M.', role: 'High School Teacher', text: 'My students actually beg me to do quizzes now. That\'s new.' },
-  { name: 'Priya K.', role: 'Corporate Trainer', text: 'Replaced our boring slide decks overnight. Engagement tripled.' },
-];
-
 export default function Landing() {
   const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
 
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
@@ -458,8 +454,8 @@ export default function Landing() {
               Quiz<span className="blitz">Blitz</span>
             </span>
           </Link>
-          <button className="nav-cta" onClick={handleGoogleLogin}>
-            Get started free
+          <button className="nav-cta" onClick={() => navigate('/join')}>
+            Join Room With Code
           </button>
         </nav>
 

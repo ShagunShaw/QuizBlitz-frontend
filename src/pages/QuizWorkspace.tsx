@@ -47,11 +47,11 @@ export default function QuizWorkspace() {
 
   useEffect(() => { fetchQuiz(); }, [quizId]);
 
-  useEffect(() => {
-    if (!quiz?.roomCode) return;
-    connectSocket();
-    socket.emit('hostJoinRoom', { roomCode: quiz.roomCode });
-  }, [quiz?.roomCode]);
+  // useEffect(() => {
+  //   if (!quiz?.roomCode) return;
+  //   connectSocket();
+  //   socket.emit('hostJoinRoom', { roomCode: quiz.roomCode });
+  // }, [quiz?.roomCode]);
 
   const fetchQuiz = async () => {
     try {
@@ -98,7 +98,7 @@ export default function QuizWorkspace() {
   // NEW: co-host leave quiz
   const handleLeaveQuiz = async () => {
     try {
-      await api.delete(`/co-host/${quizId}/leave`);
+      await api.delete(`/${quizId}/leave`);
       toast.success('You have left the quiz');
       navigate('/dashboard');
     } catch (error) { console.error(error); }
@@ -534,9 +534,18 @@ export default function QuizWorkspace() {
           <h2 className="qw-section-title">Questions</h2>
           <div className="qw-section-actions">
             {selectedQuestionIds.size > 0 && (
-              <button onClick={handleDeleteQuestions} className="qw-btn qw-btn-danger">
-                <Trash2 size={14} /> Delete ({selectedQuestionIds.size})
-              </button>
+              <>
+                <button onClick={handleDeleteQuestions} className="qw-btn qw-btn-danger">
+                  <Trash2 size={14} /> Delete ({selectedQuestionIds.size})
+                </button>
+                <button
+                  onClick={() => setSelectedQuestionIds(new Set())}
+                  className="qw-btn"
+                  style={{ background: '#fff', color: '#0f172a' }}
+                >
+                  ✕ Clear Selection
+                </button>
+              </>
             )}
             {/* Start Quiz — owner only */}
             {isOwner && (
@@ -627,7 +636,7 @@ export default function QuizWorkspace() {
         {/*  Share Link Modal */}
         <Modal isOpen={isShareModalOpen} onClose={() => setShareModalOpen(false)} title="Share Quiz Link">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <p style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 18, color: '#7a7b80', margin: 0, lineHeight: 1.6 }}>
               Share this link with participants. They can join directly without needing an account.
             </p>
             <div className="qw-share-box">
