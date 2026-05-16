@@ -29,6 +29,8 @@ export default function QuizWorkspace() {
   const [loading, setLoading] = useState(true);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
   const [isRunning, setIsRunning] = useState(false);
+  const [cohosts, setCohosts] = useState<{ _id: string; userId: { _id: string; username: string; email: string } }[]>([]);
+  const [cohostsLoading, setCohostsLoading] = useState(false);
 
   //  NEW: track whether current user is owner
   const [isOwner, setIsOwner] = useState(false);
@@ -158,6 +160,24 @@ export default function QuizWorkspace() {
       setSelectedQuestionIds(new Set());
       fetchQuiz();
     } catch (error) { console.error(error); }
+  };
+
+  const fetchCohosts = async () => {
+    try {
+      setCohostsLoading(true);
+      const res = await api.get(`/co-host/${quizId}/`);
+      setCohosts(res.data.data || []);
+    } catch (e) { console.error(e); }
+    finally { setCohostsLoading(false); }
+  };
+
+  const handleRemoveCohost = async (cohostId: string) => {
+    if (!window.confirm('Remove this co-host?')) return;
+    try {
+      const res= await api.delete(`/${quizId}/co-host`, { data: { cohostId } });
+      if(res.status == 200)  toast.success('Co-host removed');
+      fetchCohosts();
+    } catch (e) { console.error(e); }
   };
 
   const openQuestionModal = (q?: Question) => {
@@ -483,7 +503,7 @@ export default function QuizWorkspace() {
 
               {/*  Co-host management — owner only */}
               {isOwner && (
-                <button onClick={() => setCohostModalOpen(true)} className="qw-icon-btn" title="Manage Co-hosts">
+                <button onClick={() => { setCohostModalOpen(true); fetchCohosts(); }} className="qw-icon-btn" title="Manage Co-hosts">
                   <Users size={17} />
                 </button>
               )}
@@ -621,16 +641,111 @@ export default function QuizWorkspace() {
         </Modal>
 
         {/* Co-host */}
-        <Modal isOpen={isCohostModalOpen} onClose={() => setCohostModalOpen(false)} title="Add Co-host">
-          <form onSubmit={handleAddCohost} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div className="qw-modal-field">
-              <label className="qw-modal-label">Co-host Email</label>
-              <input required type="email" value={cohostEmail}
-                onChange={e => setCohostEmail(e.target.value)}
-                className="qw-modal-input" placeholder="colleague@example.com" />
+        <Modal isOpen={isCohostModalOpen} onClose={() => setCohostModalOpen(false)} title="Manage Co-hosts">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+            {/* ── Add co-host section ── */}
+            {cohosts.length >= 2 ? (
+              <div style={{
+                background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)',
+                borderRadius: 14, padding: '16px 18px',
+                display: 'flex', alignItems: 'center', gap: 12,
+                fontSize: 14, color: '#fdba74', lineHeight: 1.6,
+                opacity: 0.8,
+              }}>
+                <span style={{ fontSize: 20 }}>⚠️</span>
+                <span>You can add only <strong>2 co-hosts</strong> per quiz. Remove one to add another.</span>
+              </div>
+            ) : null}
+
+            <form
+              onSubmit={handleAddCohost}
+              style={{
+                display: 'flex', flexDirection: 'column', gap: 14,
+                opacity: cohosts.length >= 2 ? 0.4 : 1,
+                pointerEvents: cohosts.length >= 2 ? 'none' : 'auto',
+              }}
+            >
+              <div className="qw-modal-field">
+                <label className="qw-modal-label">Invite Co-host by Email</label>
+                <input
+                  required
+                  type="email"
+                  value={cohostEmail}
+                  onChange={e => setCohostEmail(e.target.value)}
+                  className="qw-modal-input"
+                  placeholder="colleague@example.com"
+                  disabled={cohosts.length >= 2}
+                />
+              </div>
+              <button type="submit" className="qw-modal-submit" disabled={cohosts.length >= 2}>
+                Send Invite
+              </button>
+            </form>
+
+            {/* ── Co-host list ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: 1, color: '#9ca3af', marginBottom: 2,
+              }}>
+                Current Co-hosts ({cohosts.length}/2)
+              </div>
+
+              {cohostsLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+                  <Loader2 size={20} className="animate-spin" style={{ color: '#6366f1' }} />
+                </div>
+              ) : cohosts.length === 0 ? (
+                <div style={{
+                  textAlign: 'center', padding: '20px 0',
+                  fontSize: 14, color: '#4b5563',
+                  border: '1px dashed rgba(255,255,255,0.08)',
+                  borderRadius: 12,
+                }}>
+                  No co-hosts yet
+                </div>
+              ) : (
+                cohosts.map((cohost) => (
+                  <div key={cohost._id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: 12, padding: '12px 14px',
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0,
+                    }}>
+                      {cohost.userId.username?.[0]?.toUpperCase() || cohost.userId.email[0].toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#e8eaf0' }}>{cohost.userId.username}</div>
+                      <div style={{ fontSize: 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {cohost.userId.email}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveCohost(cohost._id)}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: 'rgba(239,68,68,0.12)', color: '#f87171',
+                        transition: 'background 0.2s', flexShrink: 0,
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.25)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.12)')}
+                      title="Remove co-host"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
-            <button type="submit" className="qw-modal-submit">Send Invite</button>
-          </form>
+          </div>
         </Modal>
 
         {/*  Share Link Modal */}
