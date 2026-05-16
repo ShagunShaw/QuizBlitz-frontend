@@ -51,9 +51,18 @@ export default function HostControlPanel() {
     connectSocket();
     socket.emit('hostJoinRoom', { roomCode: quiz.roomCode });
 
-    socket.on('leaderboardUpdate', (data: { leaderboard: Participant[]; totalResponses: number }) => {
-      setParticipants(data.leaderboard || []);
-      setTotalResponses(data.totalResponses || 0);
+    socket.on("displayScoreBoard", (data) => {
+
+      const participants =
+        data.top7?.map(
+          (name: string, index: number) => ({
+            username: name,
+            score: data.topPoints[index]
+          })
+        ) || [];
+
+      setParticipants(participants);
+
     });
 
     return () => {
