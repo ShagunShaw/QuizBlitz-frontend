@@ -3,6 +3,7 @@ import Landing from '../pages/Landing';
 import Dashboard from '../pages/Dashboard';
 import CreateQuiz from '../pages/CreateQuiz';
 import QuizWorkspace from '../pages/QuizWorkspace';
+import HostControlPanel from '../pages/HostControlPanel';
 import AcceptInvite from '../pages/AcceptInvite';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { Layout } from '../components/Layout';
@@ -32,6 +33,16 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <Layout>
               <CreateQuiz />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/quiz/live/:quizId"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <HostControlPanel />
             </Layout>
           </ProtectedRoute>
         }

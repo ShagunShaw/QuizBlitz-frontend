@@ -10,7 +10,6 @@ import {
   LogOut, Copy, Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { socket, connectSocket } from '../services/socket';
 import { motion } from 'framer-motion';
 
 export default function QuizWorkspace() {
@@ -28,7 +27,6 @@ export default function QuizWorkspace() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
-  const [isRunning, setIsRunning] = useState(false);
   const [cohosts, setCohosts] = useState<{ _id: string; userId: { _id: string; username: string; email: string } }[]>([]);
   const [cohostsLoading, setCohostsLoading] = useState(false);
 
@@ -48,12 +46,6 @@ export default function QuizWorkspace() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => { fetchQuiz(); }, [quizId]);
-
-  // useEffect(() => {
-  //   if (!quiz?.roomCode) return;
-  //   connectSocket();
-  //   socket.emit('hostJoinRoom', { roomCode: quiz.roomCode });
-  // }, [quiz?.roomCode]);
 
   const fetchQuiz = async () => {
     try {
@@ -108,28 +100,7 @@ export default function QuizWorkspace() {
 
   const handleStartQuiz = () => {
     if (!quiz || !quiz.Questions || quiz.Questions.length === 0) { alert('No questions available'); return; }
-    if (isRunning) return;
-    setIsRunning(true);
-    runQuiz(0);
-  };
-
-  const runQuiz = (index: number) => {
-    if (!quiz) return;
-    if (index >= quiz.Questions.length) {
-      socket.emit('endQuiz', { roomCode: quiz.roomCode });
-      setIsRunning(false);
-      return;
-    }
-    const q = quiz.Questions[index];
-    const questionData = {
-      question: q.question,
-      options: q.options,
-      correctOption: q.correctOption,
-      time: q.time || 30,
-      questionNo: index + 1,
-    };
-    socket.emit('publishQuestion', { roomCode: quiz.roomCode, questionData });
-    setTimeout(() => runQuiz(index + 1), (questionData.time + 3) * 1000);
+    navigate(`/quiz/live/${quizId}`);
   };
 
   const handleSaveQuestion = async (e: React.FormEvent) => {
@@ -571,13 +542,10 @@ export default function QuizWorkspace() {
             {isOwner && (
               <button
                 onClick={handleStartQuiz}
-                disabled={isRunning || questions.length === 0}
+                disabled={questions.length === 0}
                 className="qw-btn qw-btn-start"
               >
-                {isRunning
-                  ? <><Loader2 size={14} className="animate-spin" /> Running…</>
-                  : <><Zap size={14} /> Start Quiz</>
-                }
+                <Zap size={14} /> Start Quiz
               </button>
             )}
             <button onClick={() => openQuestionModal()} className="qw-btn qw-btn-primary">

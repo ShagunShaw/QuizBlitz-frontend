@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { socket, connectSocket } from "../services/socket";
 
@@ -11,6 +11,8 @@ export default function PlayQuiz() {
     const [submitted, setSubmitted] = useState(false);
     const [scoreboard, setScoreboard] = useState<any>(null);
     const [attendeeCount, setAttendeeCount] = useState(0);
+    const [timer, setTimer] = useState(0);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // ── Join room ──────────────────────────────────────────────
     useEffect(() => {
@@ -32,6 +34,7 @@ export default function PlayQuiz() {
             setSelectedOption(null);
             setSubmitted(false);
             setScoreboard(null);
+            setTimer(question.time || 30);
         });
 
         socket.on("displayScoreBoard", (data) => {
@@ -48,6 +51,38 @@ export default function PlayQuiz() {
             socket.off("AttendeeCount");
         };
     }, []);
+
+    // ── Timer countdown ───────────────────────────────────────
+    useEffect(() => {
+        if (timer <= 0) return;
+
+        timerRef.current = setInterval(() => {
+            setTimer(prev => {
+                if (prev <= 1) {
+                    clearInterval(timerRef.current!);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [timer > 0 ? currentQuestion?.questionNo : null]);
+
+    // ── Auto-submit when timer reaches 0 ──────────────────────
+    useEffect(() => {
+        if (timer === 0 && status === "started" && !submitted && currentQuestion) {
+            socket.emit("submitAnswer", {
+                roomCode,
+                optionIndex: null,
+                userName: "Player1",
+                isAutoSubmit: true,
+            });
+            setSubmitted(true);
+        }
+    }, [timer, status, submitted, currentQuestion, roomCode]);
 
     // ── Submit answer ──────────────────────────────────────────
     const handleSubmit = () => {
@@ -85,6 +120,26 @@ export default function PlayQuiz() {
             {/* ── QUIZ ──────────────────────────────────────── */}
             {status === "started" && currentQuestion && !scoreboard && (
                 <div className="w-full max-w-xl">
+
+                    {/* Timer */}
+                    <div className="bg-gray-900 rounded-2xl shadow-md p-4 mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-semibold text-gray-400">Time Left</span>
+                            <span className={`text-lg font-bold ${
+                                timer <= 5 ? "text-red-500" : "text-indigo-400"
+                            }`}>
+                                {timer}s
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-1000 ease-linear ${
+                                    timer <= 5 ? "bg-red-500" : "bg-indigo-500"
+                                }`}
+                                style={{ width: `${(timer / (currentQuestion.time || 30)) * 100}%` }}
+                            />
+                        </div>
+                    </div>
 
                     {/* Question */}
                     <div className="bg-gray-900 rounded-2xl shadow-md p-6 mb-6 text-center">
