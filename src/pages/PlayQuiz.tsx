@@ -13,18 +13,24 @@ export default function PlayQuiz() {
     const [attendeeCount, setAttendeeCount] = useState(0);
     const [timer, setTimer] = useState(0);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [username, setUsername] = useState("");
+    const [hasJoined, setHasJoined] = useState(false);
+    const [endsAt, setEndsAt] = useState<number | null>(null);
+    const [finalLeaderboard, setFinalLeaderboard] = useState<any>(null);
 
     // ── Join room ──────────────────────────────────────────────
-    useEffect(() => {
-        if (!roomCode) return;
+    const handleJoin = () => {
+        if (!username.trim() || !roomCode) return;
 
         connectSocket();
 
         socket.emit("attendeeJoinRoom", {
             roomCode,
-            username: "Player1",
+            username,
         });
-    }, [roomCode]);
+
+        setHasJoined(true);
+    };
 
     // ── Receive events ─────────────────────────────────────────
     useEffect(() => {
@@ -34,7 +40,15 @@ export default function PlayQuiz() {
             setSelectedOption(null);
             setSubmitted(false);
             setScoreboard(null);
-            setTimer(question.time || 30);
+
+            setEndsAt(question.endsAt);
+
+            const remaining = Math.max(
+                0,
+                Math.ceil((question.endsAt - Date.now()) / 1000)
+            );
+
+            setTimer(remaining);
         });
 
         socket.on("displayScoreBoard", (data) => {
@@ -45,6 +59,10 @@ export default function PlayQuiz() {
             setAttendeeCount(attendeeCount);
         });
 
+        socket.on("quizEnded", (data) => {
+            setFinalLeaderboard(data);
+        });
+
         return () => {
             socket.off("newQuestion");
             socket.off("displayScoreBoard");
@@ -52,24 +70,27 @@ export default function PlayQuiz() {
         };
     }, []);
 
-    // ── Timer countdown ───────────────────────────────────────
+    // ── Synced Timer Countdown ───────────────────────────────────────
     useEffect(() => {
-        if (timer <= 0) return;
+        if (!endsAt) return;
 
         timerRef.current = setInterval(() => {
-            setTimer(prev => {
-                if (prev <= 1) {
-                    clearInterval(timerRef.current!);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+            const remaining = Math.max(
+                0,
+                Math.ceil((endsAt - Date.now()) / 1000)
+            );
+
+            setTimer(remaining);
+
+            if (remaining <= 0) {
+                clearInterval(timerRef.current!);
+            }
+        }, 250);
 
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [timer > 0 ? currentQuestion?.questionNo : null]);
+    }, [endsAt]);
 
     // ── Auto-submit when timer reaches 0 ──────────────────────
     useEffect(() => {
@@ -77,7 +98,7 @@ export default function PlayQuiz() {
             socket.emit("submitAnswer", {
                 roomCode,
                 optionIndex: null,
-                userName: "Player1",
+                userName: username,
                 isAutoSubmit: true,
             });
             setSubmitted(true);
@@ -92,14 +113,41 @@ export default function PlayQuiz() {
             roomCode,
             // FIX: DB stores correctOption as 0-based index, so send as-is (no + 1)
             optionIndex: selectedOption,
-            userName: "Player1",
+            userName: username,
             isAutoSubmit: false,
         });
 
         setSubmitted(true);
     };
 
+    if (!hasJoined) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-950">
+                <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-md">
+                    <h1 className="text-white text-2xl font-bold mb-4">
+                        Enter Username
+                    </h1>
+
+                    <input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="Username"
+                        className="w-full p-3 rounded-xl bg-gray-800 text-white mb-4"
+                    />
+
+                    <button
+                        onClick={handleJoin}
+                        className="w-full bg-indigo-600 text-white p-3 rounded-xl"
+                    >
+                        Join Quiz
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
+
         <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-950">
 
             {/* ── WAITING ───────────────────────────────────── */}
@@ -125,17 +173,15 @@ export default function PlayQuiz() {
                     <div className="bg-gray-900 rounded-2xl shadow-md p-4 mb-4">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-semibold text-gray-400">Time Left</span>
-                            <span className={`text-lg font-bold ${
-                                timer <= 5 ? "text-red-500" : "text-indigo-400"
-                            }`}>
+                            <span className={`text-lg font-bold ${timer <= 5 ? "text-red-500" : "text-indigo-400"
+                                }`}>
                                 {timer}s
                             </span>
                         </div>
                         <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
                             <div
-                                className={`h-full rounded-full transition-all duration-1000 ease-linear ${
-                                    timer <= 5 ? "bg-red-500" : "bg-indigo-500"
-                                }`}
+                                className={`h-full rounded-full transition-all duration-1000 ease-linear ${timer <= 5 ? "bg-red-500" : "bg-indigo-500"
+                                    }`}
                                 style={{ width: `${(timer / (currentQuestion.time || 30)) * 100}%` }}
                             />
                         </div>
@@ -222,8 +268,8 @@ export default function PlayQuiz() {
                         {/* Your answer result */}
                         {selectedOption !== null && (
                             <p className={`text-sm mt-2 font-semibold ${selectedOption === scoreboard.correctOption
-                                    ? "text-green-400"
-                                    : "text-red-500"
+                                ? "text-green-400"
+                                : "text-red-500"
                                 }`}>
                                 {/* FIX: compare selectedOption directly (both 0-based now) */}
                                 {selectedOption === scoreboard.correctOption
@@ -283,7 +329,7 @@ export default function PlayQuiz() {
                             <div className="space-y-2">
                                 {scoreboard.top7.map((name: string, i: number) => {
                                     const medals = ["🥇", "🥈", "🥉"];
-                                    const isMe = name === "Player1";
+                                    const isMe = name === username;
                                     return (
                                         <div
                                             key={i}
@@ -312,9 +358,86 @@ export default function PlayQuiz() {
                         </div>
                     )}
 
+                    {/* See from hostControlpanel and then fix, but do fix it */}
                     <p className="text-center text-sm text-gray-400 pb-4">
-                        Next question coming up...
+                        {finalLeaderboard
+                            ? "Quiz Finished"
+                            : scoreboard?.questionNo === scoreboard?.totalQuestions
+                                ? "All Questions are ended"
+                                : "Waiting for host to proceed..."
+                        }
                     </p>
+                </div>
+            )}
+
+            {/* ── FINAL LEADERBOARD ───────────────────────────── */}
+            {finalLeaderboard && (
+                <div className="fixed inset-0 bg-gray-950 flex items-center justify-center px-4 z-50">
+
+                    <div className="w-full max-w-2xl bg-gray-900 rounded-3xl shadow-2xl p-8">
+
+                        {/* Heading */}
+                        <div className="text-center mb-8">
+                            <p className="text-indigo-400 text-sm font-semibold uppercase tracking-[0.2em] mb-2">
+                                Quiz Finished
+                            </p>
+
+                            <h1 className="text-4xl font-bold text-white">
+                                Final Leaderboard
+                            </h1>
+                        </div>
+
+                        {/* Leaderboard */}
+                        <div className="space-y-3">
+                            {finalLeaderboard.finalTop7.map((name: string, i: number) => {
+
+                                const medals = ["🥇", "🥈", "🥉"];
+                                const isMe = name === username;
+
+                                return (
+                                    <div
+                                        key={i}
+                                        className={`flex items-center justify-between px-5 py-4 rounded-2xl transition-all
+                                ${isMe
+                                                ? "bg-indigo-600/20 border border-indigo-500"
+                                                : "bg-gray-950 border border-gray-800"
+                                            }`}
+                                    >
+
+                                        <div className="flex items-center gap-4">
+
+                                            <div className="text-2xl w-10 text-center">
+                                                {medals[i] ?? `#${i + 1}`}
+                                            </div>
+
+                                            <div>
+                                                <p className={`font-bold text-lg ${isMe
+                                                    ? "text-indigo-300"
+                                                    : "text-white"
+                                                    }`}>
+                                                    {name} {isMe && "(You)"}
+                                                </p>
+
+                                                <p className="text-sm text-gray-400">
+                                                    Rank {i + 1}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-right">
+                                            <p className="text-2xl font-bold text-white">
+                                                {finalLeaderboard.finalTopPoints[i]}
+                                            </p>
+
+                                            <p className="text-xs text-gray-400 uppercase">
+                                                Points
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

@@ -94,28 +94,6 @@ export const Navbar = () => {
           white-space: nowrap;
         }
 
-        /* Join Quiz button */
-        .qb-join-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          border: none;
-          padding: 8px 18px;
-          border-radius: 100px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
-          text-decoration: none;
-        }
-        .qb-join-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
-        }
-
         /* Logout button */
         .qb-logout-btn {
           display: flex;
@@ -169,12 +147,6 @@ export const Navbar = () => {
                   {user.name || user.email.split('@')[0]}
                 </span>
               </div>
-
-              {/* Join Quiz */}
-              <Link to="/join" className="qb-join-btn">
-                <Zap size={14} />
-                Join Quiz
-              </Link>
 
               {/* Logout */}
               <button onClick={handleLogout} className="qb-logout-btn" title="Logout">

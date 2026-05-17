@@ -27,6 +27,7 @@ export default function HostControlPanel() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [totalResponses, setTotalResponses] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [endsAt, setEndsAt] = useState<number | null>(null);
 
   // Fetch quiz data
   useEffect(() => {
@@ -48,8 +49,12 @@ export default function HostControlPanel() {
   // Connect socket on mount, disconnect on unmount
   useEffect(() => {
     if (!quiz?.roomCode) return;
+
     connectSocket();
-    socket.emit('hostJoinRoom', { roomCode: quiz.roomCode });
+
+    socket.emit('hostJoinRoom', {
+      roomCode: quiz.roomCode
+    });
 
     socket.on("displayScoreBoard", (data) => {
 
@@ -65,37 +70,79 @@ export default function HostControlPanel() {
 
     });
 
+    socket.on("quizEnded", (data) => {
+
+      const finalParticipants =
+        data.finalTop7?.map(
+          (name: string, index: number) => ({
+            username: name,
+            score: data.finalTopPoints[index]
+          })
+        ) || [];
+
+      setParticipants(finalParticipants);
+
+      setQuizFinished(true);
+
+    });
+
     return () => {
       resetSocketListeners();
       disconnectSocket();
     };
+
   }, [quiz?.roomCode]);
 
   // Timer countdown
   useEffect(() => {
-    if (!isQuestionActive || timer <= 0) return;
-    timerRef.current = setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          setIsQuestionActive(false);
-          setShowLeaderboard(true);
-          if (quiz?.roomCode) {
-            socket.emit('showLeaderboard', { roomCode: quiz.roomCode });
-          }
-          return 0;
+
+    if (!isQuestionActive || !endsAt) return;
+
+    const updateTimer = () => {
+
+      const remaining = Math.max(
+        0,
+        Math.ceil((endsAt - Date.now()) / 1000)
+      );
+
+      setTimer(remaining);
+
+      if (remaining <= 0) {
+
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
         }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [isQuestionActive, timer, quiz?.roomCode]);
+
+        setIsQuestionActive(false);
+        setShowLeaderboard(true);
+
+        if (quiz?.roomCode) {
+          socket.emit('showLeaderboard', {
+            roomCode: quiz.roomCode
+          });
+        }
+      }
+    };
+
+    // run instantly instead of waiting 1 second
+    updateTimer();
+
+    timerRef.current = setInterval(updateTimer, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+
+  }, [isQuestionActive, endsAt, quiz?.roomCode]);
 
   const totalQuestions = quiz?.Questions?.length || 0;
   const currentQuestion = quiz?.Questions?.[currentQuestionIndex];
 
   const handlePublishQuestion = useCallback(() => {
     if (!quiz || !currentQuestion) return;
+
     const questionData = {
       question: currentQuestion.question,
       options: currentQuestion.options,
@@ -103,23 +150,37 @@ export default function HostControlPanel() {
       time: currentQuestion.time || 30,
       questionNo: currentQuestionIndex + 1,
     };
-    socket.emit('publishQuestion', { roomCode: quiz.roomCode, questionData });
-    setTimer(currentQuestion.time || 30);
+
+    socket.emit('publishQuestion', {
+      roomCode: quiz.roomCode,
+      questionData
+    });
+
     setIsQuestionActive(true);
     setShowLeaderboard(false);
+    setEndsAt(Date.now() + (questionData.time * 1000));
+
   }, [quiz, currentQuestion, currentQuestionIndex]);
 
   const handleNextQuestion = useCallback(() => {
+
     if (currentQuestionIndex + 1 >= totalQuestions) {
-      // Last question — end quiz
-      if (quiz?.roomCode) socket.emit('endQuiz', { roomCode: quiz.roomCode });
-      setQuizFinished(true);
-      setShowLeaderboard(true);
-    } else {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setShowLeaderboard(false);
-      setTotalResponses(0);
+
+      if (quiz?.roomCode) {
+
+        socket.emit('endQuiz', {
+          roomCode: quiz.roomCode
+        });
+
+      }
+
+      return;
     }
+
+    setCurrentQuestionIndex(prev => prev + 1);
+    setShowLeaderboard(false);
+    setTotalResponses(0);
+
   }, [currentQuestionIndex, totalQuestions, quiz?.roomCode]);
 
   if (loading) return (
@@ -279,11 +340,16 @@ export default function HostControlPanel() {
                     {currentQuestion.options.map((opt, i) => {
                       const colors = ['#6366f1', '#ec4899', '#f59e0b', '#22c55e'];
                       const optText = typeof opt === 'string' ? opt : opt.text;
+
                       return (
-                        <div key={i} className={`hcp-opt ${currentQuestion.correctOption === i ? 'correct' : ''}`}>
-                          <div className="hcp-opt-label" style={{ background: colors[i % 4] }}>
+                        <div key={i} className="hcp-opt">
+                          <div
+                            className="hcp-opt-label"
+                            style={{ background: colors[i % 4] }}
+                          >
                             {String.fromCharCode(65 + i)}
                           </div>
+
                           {optText}
                         </div>
                       );
@@ -328,7 +394,7 @@ function LeaderboardView({ participants, totalResponses, currentQuestion, totalQ
         </h3>
         <div className="hcp-lb-stats">
           <span><Hash size={13} /> Q <strong>{currentQuestion}/{totalQuestions}</strong></span>
-          <span><Users size={13} /> Responses <strong>{totalResponses}</strong></span>
+          {/* <span><Users size={13} /> Responses <strong>{totalResponses}</strong></span> */}
         </div>
       </div>
       {sorted.length === 0 ? (
