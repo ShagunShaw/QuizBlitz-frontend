@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { socket, connectSocket } from "../services/socket";
+import { useParams, useNavigate } from "react-router-dom";
+import { socket, connectSocket, disconnectSocket, resetSocketListeners } from "../services/socket";
+import toast from 'react-hot-toast';
 
 export default function PlayQuiz() {
     const { roomCode } = useParams();
+    const navigate = useNavigate();
 
     const [status, setStatus] = useState<"waiting" | "started">("waiting");
     const [currentQuestion, setCurrentQuestion] = useState<any>(null);
@@ -124,6 +126,21 @@ export default function PlayQuiz() {
         setSubmitted(true);
     };
 
+    const handleLeaveQuiz = () => {
+
+    const confirmLeave = window.confirm(
+        "Are you sure you want to leave the quiz?"
+    );
+
+    if (!confirmLeave) return;
+
+    resetSocketListeners();
+    disconnectSocket();
+
+    navigate("/");
+    toast.success("Quiz left successfully")
+};
+
     if (!hasJoined) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-950">
@@ -153,6 +170,32 @@ export default function PlayQuiz() {
     return (
 
         <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-950">
+
+            {hasJoined && (
+                <div className="fixed top-5 left-1/2 -translate-x-1/2 z-40">
+                    <div className="px-5 py-2 rounded-full bg-gray-900 border border-gray-800 shadow-lg">
+                        <p className="text-sm font-semibold text-gray-300">
+                            Playing as{" "}
+                            <span className="text-indigo-400 font-bold">
+                                {username}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Leave Quiz Button */}
+            {hasJoined && (
+                <button
+                    onClick={handleLeaveQuiz}
+                    className="fixed top-5 right-5 z-40 px-4 py-2 rounded-full
+                   bg-red-600 hover:bg-red-700
+                   text-white text-sm font-semibold
+                   shadow-lg transition-all duration-200"
+                >
+                    Leave Quiz
+                </button>
+            )}
 
             {/* ── WAITING ───────────────────────────────────── */}
             {status === "waiting" && (
@@ -277,7 +320,7 @@ export default function PlayQuiz() {
                                 }`}>
                                 {/* FIX: compare selectedOption directly (both 0-based now) */}
                                 {selectedOption === scoreboard.correctOption
-                                    ? (!isAutoSubmit)?"✓ You got it right!":"You got it right, must have submitted the answer"
+                                    ? (!isAutoSubmit) ? "✓ You got it right!" : "You got it right, must have submitted the answer"
                                     : "✗ Your answer was wrong"}
                             </p>
                         )}

@@ -28,6 +28,8 @@ export default function HostControlPanel() {
   const [totalResponses, setTotalResponses] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [endsAt, setEndsAt] = useState<number | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [quizStarted, setQuizStarted] = useState(false);
 
   // Fetch quiz data
   useEffect(() => {
@@ -140,6 +142,17 @@ export default function HostControlPanel() {
   const totalQuestions = quiz?.Questions?.length || 0;
   const currentQuestion = quiz?.Questions?.[currentQuestionIndex];
 
+  const handleForceEndQuiz = () => {
+
+    if (quiz?.roomCode) {
+      socket.emit('endQuiz', {
+        roomCode: quiz.roomCode
+      });
+    }
+
+    setShowLeaveConfirm(false);
+  };
+
   const handlePublishQuestion = useCallback(() => {
     if (!quiz || !currentQuestion) return;
 
@@ -157,7 +170,8 @@ export default function HostControlPanel() {
     });
 
     setIsQuestionActive(true);
-    setShowLeaderboard(false);
+setQuizStarted(true);
+setShowLeaderboard(false);
     setEndsAt(Date.now() + (questionData.time * 1000));
 
   }, [quiz, currentQuestion, currentQuestionIndex]);
@@ -249,7 +263,19 @@ export default function HostControlPanel() {
       `}</style>
 
       <div className="hcp-wrap">
-        <button className="hcp-back" onClick={() => navigate(`/quiz/${quizId}`)}>
+        <button
+  className="hcp-back"
+  onClick={() => {
+
+    // from first publish till final leaderboard
+    if (quizStarted && !quizFinished) {
+      setShowLeaveConfirm(true);
+      return;
+    }
+
+    navigate(`/quiz/${quizId}`);
+  }}
+>
           <ArrowLeft size={16} /> Back to Workspace
         </button>
 
@@ -365,6 +391,91 @@ export default function HostControlPanel() {
           </div>
         </motion.div>
       </div>
+      {showLeaveConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+        >
+          <div
+            style={{
+              width: '90%',
+              maxWidth: 420,
+              background: '#111827',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 24,
+              padding: 28
+            }}
+          >
+            <h2
+              style={{
+                color: '#fff',
+                fontSize: 22,
+                fontWeight: 800,
+                marginBottom: 12
+              }}
+            >
+              Leave Arena?
+            </h2>
+
+            <p
+              style={{
+                color: '#9ca3af',
+                fontSize: 14,
+                lineHeight: 1.6,
+                marginBottom: 24
+              }}
+            >
+              The quiz will be ended if you leave the arena.
+            </p>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 12
+              }}
+            >
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: 14,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'rgba(255,255,255,0.04)',
+                  color: '#fff',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleForceEndQuiz}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: 14,
+                  border: 'none',
+                  background: 'linear-gradient(135deg,#ef4444,#dc2626)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                End Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
