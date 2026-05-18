@@ -145,8 +145,8 @@ export default function QuizWorkspace() {
   const handleRemoveCohost = async (cohostId: string) => {
     if (!window.confirm('Remove this co-host?')) return;
     try {
-      const res= await api.delete(`/${quizId}/co-host`, { data: { cohostId } });
-      if(res.status == 200)  toast.success('Co-host removed');
+      const res = await api.delete(`/${quizId}/co-host`, { data: { cohostId } });
+      if (res.status == 200) toast.success('Co-host removed');
       fetchCohosts();
     } catch (e) { console.error(e); }
   };
@@ -782,14 +782,59 @@ export default function QuizWorkspace() {
               </div>
             </div>
             <div className="qw-modal-field" style={{ maxWidth: 200 }}>
-              <label className="qw-modal-label">Time Limit</label>
-              <select value={questionFormData.time}
-                onChange={e => setQuestionFormData({ ...questionFormData, time: Number(e.target.value) })}
-                className="qw-modal-select">
-                {[10, 20, 30, 60, 90, 120].map(t => (
-                  <option key={t} value={t}>{t} seconds</option>
-                ))}
-              </select>
+              <label className="qw-modal-label">
+                Time Limit
+              </label>
+
+              <div style={{ position: "relative" }}>
+                <select
+                  value={questionFormData.time}
+                  onChange={e =>
+                    setQuestionFormData({
+                      ...questionFormData,
+                      time: Number(e.target.value)
+                    })
+                  }
+                  className="qw-modal-select"
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    color: "#e8eaf0",
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                    MozAppearance: "none",
+                    paddingRight: "35px",
+                    border: "1.5px solid rgba(255,255,255,0.07)",
+                    borderRadius: "14px"
+                  }}
+                >
+                  {[10, 20, 30, 60, 90, 120].map(t => (
+                    <option
+                      key={t}
+                      value={t}
+                      style={{
+                        background: "#111827",
+                        color: "#e8eaf0"
+                      }}
+                    >
+                      {t} seconds
+                    </option>
+                  ))}
+                </select>
+
+                <span
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "black",
+                    fontSize: "12px"
+                  }}
+                >
+                  ▼
+                </span>
+              </div>
             </div>
             <button type="submit" className="qw-modal-submit">
               {editingQuestionId ? 'Update Question' : 'Add Question →'}

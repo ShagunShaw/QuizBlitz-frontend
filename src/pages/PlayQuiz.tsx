@@ -17,6 +17,7 @@ export default function PlayQuiz() {
     const [hasJoined, setHasJoined] = useState(false);
     const [endsAt, setEndsAt] = useState<number | null>(null);
     const [finalLeaderboard, setFinalLeaderboard] = useState<any>(null);
+    const [isAutoSubmit, setIsAutoSubmit] = useState(false);
 
     // ── Join room ──────────────────────────────────────────────
     const handleJoin = () => {
@@ -40,6 +41,7 @@ export default function PlayQuiz() {
             setSelectedOption(null);
             setSubmitted(false);
             setScoreboard(null);
+            setIsAutoSubmit(false);
 
             setEndsAt(question.endsAt);
 
@@ -97,10 +99,12 @@ export default function PlayQuiz() {
         if (timer === 0 && status === "started" && !submitted && currentQuestion) {
             socket.emit("submitAnswer", {
                 roomCode,
-                optionIndex: null,
+                // optionIndex: null,
+                optionIndex: selectedOption,
                 userName: username,
                 isAutoSubmit: true,
             });
+            setIsAutoSubmit(true);
             setSubmitted(true);
         }
     }, [timer, status, submitted, currentQuestion, roomCode]);
@@ -273,7 +277,7 @@ export default function PlayQuiz() {
                                 }`}>
                                 {/* FIX: compare selectedOption directly (both 0-based now) */}
                                 {selectedOption === scoreboard.correctOption
-                                    ? "✓ You got it right!"
+                                    ? (!isAutoSubmit)?"✓ You got it right!":"You got it right, must have submitted the answer"
                                     : "✗ Your answer was wrong"}
                             </p>
                         )}

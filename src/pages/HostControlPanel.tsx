@@ -311,7 +311,8 @@ export default function HostControlPanel() {
                       const colors = ['#6366f1', '#ec4899', '#f59e0b', '#22c55e'];
                       const optText = typeof opt === 'string' ? opt : opt.text;
                       return (
-                        <div key={i} className={`hcp-opt ${currentQuestion.correctOption === i ? 'correct' : ''}`}>
+                        // <div key={i} className={`hcp-opt ${currentQuestion.correctOption === i ? 'correct' : ''}`}>
+                        <div key={i} className="hcp-opt">
                           <div className="hcp-opt-label" style={{ background: colors[i % 4] }}>
                             {String.fromCharCode(65 + i)}
                           </div>
