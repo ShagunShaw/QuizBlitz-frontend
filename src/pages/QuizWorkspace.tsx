@@ -180,7 +180,9 @@ export default function QuizWorkspace() {
       toast.success('Invite sent to co-host');
       setCohostEmail('');
       setCohostModalOpen(false);
-    } catch (error) { console.error(error); }
+    } catch (error: any) {
+      toast.error(error.response?.data?.errorMessage || "Failed to send email");
+    }
   };
 
   //  NEW: share link — frontend /play/:roomCode route
